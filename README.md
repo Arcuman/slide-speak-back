@@ -19,8 +19,8 @@ The frontend for this project is available here: [https://github.com/SlideSpeak/
 
 - Python3
 - Pinecone
-- MongoDB
-- S3 with AWS credentials
+- MongoDB (Optionally, you can use run it in docker)
+- S3 with AWS credentials (Optionally, you can use minio)
 - OpenAI API credentials
 
 ## Setup
@@ -41,6 +41,12 @@ The frontend for this project is available here: [https://github.com/SlideSpeak/
 3. Set up environment variables by copying `.env.example` to `.env` and filling in your values.
 
 ### Running the Application
+
+To start locally: 
+
+- run `docker-compose up minio mongodb unoserver` 
+- run `./startup.sh`
+
 
 _Please note:_ Both the index server and the flask backend need to run in parallel.
 

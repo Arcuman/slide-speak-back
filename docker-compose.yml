@@ -46,6 +46,47 @@ services:
     ports:
       - "2002:2002"
       - "2004:2004"
+  
+  index-server:
+    platform: linux/arm64
+    build:
+      context: .
+      args:
+        TARGETPLATFORM: linux/arm64
+    env_file: .env
+    command: ["python", "-u", "index_server.py"]
+    ports:
+      - "${INDEX_SERVER_PORT}:${INDEX_SERVER_PORT}"
+    networks:
+      - slidespeak-network
+    depends_on:
+      - redis
+      - minio
+      - mongodb
+
+  web:
+    platform: linux/arm64
+    build:
+      context: .
+      args:
+        TARGETPLATFORM: linux/arm64
+    env_file: .env
+    command:
+      - gunicorn
+      - --workers
+      - "4"
+      - --bind
+      - "0.0.0.0:${PORT}"
+      - wsgi:app
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - slidespeak-network
+    depends_on:
+      - index-server
+      - redis
+      - minio
+      - mongodb
 
 networks:
   slidespeak-network:

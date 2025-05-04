@@ -48,6 +48,7 @@ def get_documents():
         return f"Error: {str(e)}", 500
 
 
+# TODO: Can we delete this route? <-- Deprecate
 @api_bp.route("/query", methods=["GET"])
 def query_index():
     """Query the index with original endpoint path"""

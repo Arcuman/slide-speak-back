@@ -1,8 +1,6 @@
 import hashlib
 import logging
 import os
-import pathlib
-import secrets
 import time
 from multiprocessing.managers import BaseManager
 from queue import Queue
@@ -17,7 +15,6 @@ from llama_index.llm_predictor.chatgpt import LLMPredictor
 from llama_index.node_parser import SimpleNodeParser
 
 from app.config import Config
-from app.core.query import worker
 from app.storage.vector_storage import (
     get_document_store,
     get_pinecone_client,
@@ -78,6 +75,31 @@ class IndexManager:
         PptxReader = download_loader("PptxReader")
         self.loader = PptxReader()
 
+    def worker(self, queue, query_text, doc_id, initialize_index=None):
+        """Worker process to handle querying the index asynchronously"""
+        try:
+            # If initialize_index is provided, use it to initialize the index
+            if initialize_index:
+                initialize_index(doc_id)
+
+            # Use streaming query engine
+            streaming_response = self.index.as_query_engine(
+                streaming=True, similarity_top_k=1
+            ).query(query_text)
+
+            # Process text chunks as they arrive
+            for text in streaming_response.response_gen:
+                print(text)
+                queue.put(text)  # Put the text into the queue
+
+            # Signal completion
+            queue.put(None)
+
+        except Exception as e:
+            logger.error(f"Error in worker: {str(e)}", exc_info=True)
+            queue.put(f"Error: {str(e)}")
+            queue.put(None)  # Always signal completion
+
     def initialize_index(self, namespace):
         """Create a new index for the specified namespace"""
         logger.info(f"Initializing index for namespace: {namespace}")
@@ -103,7 +125,9 @@ class IndexManager:
         """Start a worker thread for processing queries"""
         logger.info(f"Starting worker for namespace: {name} with query: {query_text}")
         queue = Queue()
-        t = Thread(target=worker, args=(queue, query_text, name, self.initialize_index))
+        t = Thread(
+            target=self.worker, args=(queue, query_text, name, self.initialize_index)
+        )
         t.start()
         return queue
 
