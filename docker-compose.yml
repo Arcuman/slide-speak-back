@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - slidespeak-network
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    networks:
+      - slidespeak-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-example}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - slidespeak-network
+
+  unoserver:
+    image: libreofficedocker/libreoffice-unoserver:3.19-e2eb67c
+    ports:
+      - "2002:2002"
+      - "2004:2004"
+
+networks:
+  slidespeak-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  minio-data:
+  mongo-data:
+  upload-data:
+  preview-data:
