@@ -33,5 +33,5 @@ python3 -m pip install setuptools
 # Now install other requirements
 python3 -m pip install -r requirements.txt
 
-# Run the application
-python3 app.py
+# Run the application from project root to handle imports correctly
+python3 main.py
