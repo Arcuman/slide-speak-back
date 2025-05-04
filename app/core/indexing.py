@@ -21,6 +21,12 @@ from app.storage.vector_storage import (
     get_storage_context,
 )
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -271,14 +277,18 @@ def create_index_manager():
 
 def run_index_server():
     """Run the index server"""
+    logger.info(
+        f"Starting index server on {Config.INDEX_SERVER_HOST}:{Config.INDEX_SERVER_PORT}..."
+    )
+    print(
+        f"Starting index server on {Config.INDEX_SERVER_HOST}:{Config.INDEX_SERVER_PORT}..."
+    )
     host = (
         Config.INDEX_SERVER_HOST
         if hasattr(Config, "INDEX_SERVER_HOST")
         else "127.0.0.1"
     )
     port = Config.INDEX_SERVER_PORT if hasattr(Config, "INDEX_SERVER_PORT") else 5602
-
-    logger.info(f"Starting index server on {host}:{port}...")
 
     # Create a BaseManager with secure configuration
     manager = BaseManager((host, port), get_auth_key())
